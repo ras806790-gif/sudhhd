@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranzz AI - Code Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Custom scrollbar biar makin estetik */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444;
+        }
+    </style>
+</head>
+<body class="bg-[#0b0b0b] text-white font-sans h-screen flex flex-col justify-between">
+
+    <header class="border-b border-[#222] bg-[#111] px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
+                <span class="text-black font-black text-xl">R</span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wider">Ranzz <span class="text-xs text-gray-400 font-normal">v2.0</span></h1>
+                <p class="text-[10px] text-gray-500">Error Rate: <span id="error-rate" class="text-gray-300 font-mono">10%</span></p>
+            </div>
+        </div>
+        <div id="badge-status" class="bg-[#222] border border-[#333] text-gray-300 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-gray-400"></span> Standard Version
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-6 max-w-4xl w-full mx-auto space-y-6" id="chat-box">
+        <div class="bg-[#111] border border-[#222] p-6 rounded-xl space-y-2">
+            <h2 class="text-lg font-semibold">Halo, Gw Ranzz. AI Pembuat Code Super Pintar.</h2>
+            <p class="text-gray-400 text-sm">Ketik perintah coding apa saja di bawah, gw bakal buatin dengan akurasi tinggi.</p>
+            <div class="pt-2 text-xs text-gray-500">
+                💡 <span class="italic">Ketik <strong class="text-white">upgrade to premium</strong> untuk membuka fitur Premium (Error Rate 1%).</span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="p-6 max-w-4xl w-full mx-auto">
+        <div class="bg-[#111] border border-[#222] rounded-xl p-3 focus-within:border-[#444] transition">
+            <form id="prompt-form" class="flex gap-3 items-end">
+                <textarea 
+                    id="user-input"
+                    rows="2" 
+                    placeholder="Masukkan prompt atau 'upgrade to premium' di sini..." 
+                    class="w-full bg-transparent resize-none outline-none text-sm text-gray-200 placeholder-gray-600 py-1 px-2"
+                ></textarea>
+                <button 
+                    type="submit" 
+                    class="bg-white text-black hover:bg-gray-200 font-medium text-sm px-5 py-2.5 rounded-lg transition shrink-0 cursor-pointer"
+                >
+                    Generate
+                </button>
+            </form>
+        </div>
+        <p class="text-center text-[10px] text-gray-600 mt-3">© 2026 Ranzz AI Engine. Built with precision.</p>
+    </footer>
+
+    <script>
+        const form = document.getElementById('prompt-form');
+        const userInput = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const errorRateDisplay = document.getElementById('error-rate');
+        const badgeStatus = document.getElementById('badge-status');
+        
+        let isPremium = false;
+
+        // Fitur submit form
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // Tambah chat user ke layar
+            appendMessage(text, 'user');
+            userInput.value = '';
+
+            // Cek apakah user input command upgrade
+            if (text.toLowerCase() === 'upgrade to premium') {
+                setTimeout(() => {
+                    triggerUpgrade();
+                }, 800);
+            } else {
+                // Simulasi AI membalas codingan
+                setTimeout(() => {
+                    generateAiResponse(text);
+                }, 1000);
+            }
+        });
+
+        // Enter untuk submit, Shift+Enter untuk baris baru
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                form.requestSubmit();
+            }
+        });
+
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = sender === 'user' ? 'flex justify-end' : 'flex justify-start';
+            
+            const innerDiv = document.createElement('div');
+            innerDiv.className = sender === 'user' 
+                ? 'bg-[#222] border border-[#333] max-w-[80%] rounded-xl px-4 py-3 text-sm text-gray-200' 
+                : 'bg-[#161616] border border-[#222] max-w-[90%] w-full rounded-xl px-4 py-3 text-sm space-y-2';
+
+            if (sender === 'user') {
+                innerDiv.innerText = text;
+            } else {
+                innerDiv.innerHTML = text;
+            }
+
+            msgDiv.appendChild(innerDiv);
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Logic Upgrade ke Premium
+        function triggerUpgrade() {
+            isPremium = true;
+            errorRateDisplay.innerText = '1%';
+            errorRateDisplay.className = 'text-white font-mono font-bold bg-[#222] px-1.5 py-0.5 rounded border border-[#333]';
+            
+            badgeStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-white animate-pulse"></span> Premium Active';
+            badgeStatus.className = 'bg-white text-black px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2';
+
+            appendMessage(`
+                <p class="text-white font-bold">✨ Ranzz AI Berhasil Di-upgrade ke Premium!</p>
+                <p class="text-gray-400 text-xs">Akurasi ditingkatkan. Tingkat kesalahan sekarang hanya <span class="text-white font-bold">1%</span>. Silahkan perintahkan kode yang lebih kompleks.</p>
+            `, 'ai');
+        }
+
+        // Simulasi Generate Code jawaban AI
+        function generateAiResponse(prompt) {
+            let errorText = isPremium ? '1% (Premium Accuracy)' : '10% (Standard Mode)';
+            
+            let responseHtml = `
+                <div class="flex items-center justify-between border-b border-[#222] pb-2 mb-2">
+                    <span class="text-xs font-mono text-gray-400">Ranzz Generated Code (Error Rate: ${errorText})</span>
+                    <span class="text-[10px] bg-[#222] text-gray-400 px-2 py-0.5 rounded">HTML/JS</span>
+                </div>
+                <pre class="bg-[#0b0b0b] p-4 rounded-lg overflow-x-auto text-xs font-mono text-gray-300 border border-[#222]"><code>// Hasil code berdasarkan prompt: "${prompt}"\n\nfunction ranzzSmartEngine() {\n    console.log("Code generated perfectly.");\n    return true;\n}</code></pre>
+            `;
+            appendMessage(responseHtml, 'ai');
+        }
+    </script>
+</body>
+</html>
