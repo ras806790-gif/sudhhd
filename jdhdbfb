@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acode-like Code Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1e1e2e;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            padding: 20px;
+        }
+
+        /* Container utama seperti Acode */
+        .editor-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #0a0a0f;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid #2a2a3a;
+        }
+
+        /* Header ala terminal */
+        .header {
+            background: #15151e;
+            padding: 12px 20px;
+            border-bottom: 1px solid #2a2a3a;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .red { background: #ff5f56; }
+        .yellow { background: #ffbd2e; }
+        .green { background: #27c93f; }
+
+        .title {
+            color: #b4b4d4;
+            font-size: 13px;
+            margin-left: 8px;
+        }
+
+        /* Area kode */
+        .code-area {
+            padding: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 400px;
+            background: #0a0a0f;
+            border: 1px solid #2a2a3a;
+            border-radius: 12px;
+            color: #d4d4d4;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            padding: 16px;
+            resize: vertical;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        textarea:focus {
+            border-color: #6c5ce7;
+        }
+
+        /* Baris info seperti preview */
+        .info-bar {
+            background: #0f0f17;
+            padding: 10px 20px;
+            border-top: 1px solid #2a2a3a;
+            display: flex;
+            justify-content: space-between;
+            color: #6c6c8a;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        /* Tombol gaya Acode */
+        .button-group {
+            padding: 12px 20px 20px 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #1e1e2a;
+            border: 1px solid #3a3a4a;
+            color: #c4c4e0;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #2a2a3a;
+            border-color: #6c5ce7;
+            color: #ffffff;
+        }
+
+        .btn-primary {
+            background: #6c5ce7;
+            border-color: #6c5ce7;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5b4bc4;
+        }
+
+        .output {
+            background: #050508;
+            border-top: 1px solid #2a2a3a;
+            padding: 16px 20px;
+            color: #b4b4d4;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .output pre {
+            background: #0a0a0f;
+            padding: 12px;
+            border-radius: 10px;
+            overflow-x: auto;
+            color: #9cdcfe;
+        }
+
+        .badge {
+            color: #6c5ce7;
+        }
+    </style>
+</head>
+<body>
+<div class="editor-container">
+    <div class="header">
+        <div>
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+        <div class="title">📁 acode_editor.c — C-style preview</div>
+    </div>
+
+    <div class="code-area">
+        <textarea id="codeEditor" placeholder="Tulis kode kamu di sini...&#10;&#10;#include &lt;stdio.h>&#10;int main() {&#10;    printf(&quot;Hello Acode!&quot;);&#10;    return 0;&#10;}"></textarea>
+    </div>
+
+    <div class="button-group">
+        <button class="btn" id="runBtn">▶ RUN</button>
+        <button class="btn" id="copyBtn">📋 Copy</button>
+        <button class="btn" id="clearBtn">🗑 Clear</button>
+        <button class="btn btn-primary" id="resetPreviewBtn">🔁 Reset ke contoh C</button>
+    </div>
+
+    <div class="info-bar">
+        <span>📄 characters: <span id="charCount">0</span></span>
+        <span>📏 lines: <span id="lineCount">0</span></span>
+        <span>⚡ like Acode editor</span>
+    </div>
+
+    <div class="output">
+        <span class="badge">📟 OUTPUT PREVIEW (simulasi terminal)</span>
+        <pre id="outputArea">> Klik RUN untuk menjalankan kode (simulasi output)</pre>
+    </div>
+</div>
+
+<script>
+    const editor = document.getElementById('codeEditor');
+    const outputArea = document.getElementById('outputArea');
+    const charSpan = document.getElementById('charCount');
+    const lineSpan = document.getElementById('lineCount');
+
+    // Update statistik (karakter & baris)
+    function updateStats() {
+        const code = editor.value;
+        charSpan.textContent = code.length;
+        const lines = code.split('\n').length;
+        lineSpan.textContent = lines;
+    }
+
+    editor.addEventListener('input', updateStats);
+    updateStats();
+
+    // Simulasi output seperti gaya preview C
+    function simulateOutput(code) {
+        let output = '';
+        if (code.includes('printf') || code.includes('puts') || code.includes('cout')) {
+            output = '✓ Eksekusi simulasi:\n';
+            // cari pesan sederhana
+            const printfMatch = code.match(/printf\s*\(\s*"([^"]*)"/);
+            if (printfMatch) {
+                output += '> ' + printfMatch[1] + '\n';
+            } else {
+                output += '> (Program C siap dijalankan di lingkungan nyata)\n';
+            }
+            output += '✅ Compiler: gcc -o program source.c\n';
+            output += '📦 Return code: 0\n';
+        } 
+        else if (code.includes('scanf')) {
+            output = '📥 Program menunggu input...\n[simulasi] Input diterima.\n';
+        }
+        else if (code.includes('#include')) {
+            output = '🔧 Preprocessing header...\n🔨 Compiling...\n✨ Build successful!\n💻 Output: Hallo dari kode C-like!';
+        }
+        else {
+            output = '💡 Kode kamu:\n' + code.substring(0, 200) + (code.length > 200 ? '...' : '') + '\n\n✨ Simulasi: kode siap di compile dengan gcc.';
+        }
+        
+        // tambahan efek retro
+        output += '\n─────────────────────────\n🖥️ Acode-like Terminal v1.0';
+        return output;
+    }
+
+    // RUN button
+    document.getElementById('runBtn').addEventListener('click', () => {
+        const code = editor.value;
+        if (code.trim() === '') {
+            outputArea.innerHTML = '⚠️ Tidak ada kode untuk dijalankan.';
+            return;
+        }
+        const result = simulateOutput(code);
+        outputArea.innerHTML = result;
+    });
+
+    // Copy button
+    document.getElementById('copyBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(editor.value);
+        outputArea.innerHTML = '📋 Kode berhasil disalin ke clipboard!';
+        setTimeout(() => {
+            if (editor.value.trim() !== '') {
+                const result = simulateOutput(editor.value);
+                outputArea.innerHTML = result;
+            }
+        }, 1500);
+    });
+
+    // Clear button
+    document.getElementById('clearBtn').addEventListener('click', () => {
+        editor.value = '';
+        updateStats();
+        outputArea.innerHTML = '> Editor dibersihkan. Tulis kode baru.';
+    });
+
+    // Reset ke contoh C seperti preview kamu
+    document.getElementById('resetPreviewBtn').addEventListener('click', () => {
+        const exampleCode = `#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <time.h>
+#include <ctype.h>
+
+#define MAX_STRING_LENGTH 100
+
+int main() {
+    char nama[MAX_STRING_LENGTH];
+    int umur;
+    
+    printf("Masukkan nama: ");
+    fgets(nama, MAX_STRING_LENGTH, stdin);
+    printf("Masukkan umur: ");
+    scanf("%d", &umur);
+    
+    printf("\\n=== OUTPUT ===\\n");
+    printf("Nama : %s", nama);
+    printf("Umur : %d tahun\\n", umur);
+    printf("Selamat coding di Acode!\\n");
+    
+    return 0;
+}`;
+        editor.value = exampleCode;
+        updateStats();
+        outputArea.innerHTML = '✅ Contoh gaya kode C (mirip preview kamu) sudah dimuat. Klik RUN!';
+    });
+</script>
+</body>
+</html>
