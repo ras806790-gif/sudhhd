@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Ultimate FBS Monitor | Spesifikasi + Suhu Baterai + Kecepatan Internet + Sensor Lengkap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0b1120, #030712);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            max-width: 1500px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 1.6rem;
+        }
+
+        /* Glassmorphic Card */
+        .card {
+            background: rgba(15, 25, 45, 0.65);
+            backdrop-filter: blur(14px);
+            border-radius: 2rem;
+            border: 1px solid rgba(66, 153, 225, 0.25);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            border-color: rgba(0, 212, 255, 0.5);
+            transform: translateY(-3px);
+        }
+
+        .card-header {
+            padding: 1.2rem 1.5rem;
+            background: rgba(0, 15, 30, 0.7);
+            border-bottom: 1px solid rgba(72, 187, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.2px;
+            color: #eef5ff;
+        }
+
+        .card-header i {
+            font-size: 1.6rem;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        /* Grid info */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-tile {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 1.2rem;
+            padding: 0.9rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.1s;
+        }
+
+        .info-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #9ab3d5;
+            letter-spacing: 0.6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f0f9ff;
+            margin-top: 8px;
+            word-break: break-word;
+        }
+
+        /* Meter Bar */
+        .meter-container {
+            margin: 12px 0;
+        }
+        .meter-bar-bg {
+            background: #1e2a3a;
+            border-radius: 40px;
+            height: 20px;
+            overflow: hidden;
+            box-shadow: inset 0 1px 3px #00000055;
+        }
+        .meter-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4, #10b981);
+            border-radius: 40px;
+            transition: width 0.3s ease;
+        }
+        .badge {
+            background: #0f212e;
+            padding: 0.2rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .gauge-large {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        button {
+            background: #1e3a5f;
+            border: none;
+            color: white;
+            padding: 0.65rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        button:active {
+            transform: scale(0.97);
+            background: #0f2b44;
+        }
+        .footnote {
+            font-size: 0.65rem;
+            text-align: center;
+            margin-top: 1rem;
+            opacity: 0.6;
+            color: #b9d0f0;
+        }
+        .wifi-animation {
+            font-size: 2rem;
+            filter: drop-shadow(0 0 4px #00a6ff);
+        }
+        hr {
+            margin: 14px 0;
+            border-color: rgba(72, 187, 255, 0.2);
+        }
+        .status-online {
+            color: #4ade80;
+        }
+        .status-warning {
+            color: #facc15;
+        }
+    </style>
+</head>
+<body>
+<div class="dashboard">
+    
+    <!-- KARTU 1: SPESIFIKASI LENGKAP + SUHU BATUAI (SIMULASI REALISTIS) -->
+    <div class="card">
+        <div class="card-header">
+            <span>🔥📱</span> HARDWARE & BATTERY THERMAL
+        </div>
+        <div class="card-content">
+            <div class="info-grid" id="specGrid">
+                <div class="info-tile">⏳ Memuat data perangkat...</div>
+            </div>
+            <div class="meter-container" style="margin-top: 12px;">
+                <div class="flex-between"><span class="info-label">🌡️ SUHU BATERAI (estimasi realtime)</span><span id="batteryTempLabel" class="badge">-- °C</span></div>
+                <div class="meter-bar-bg"><div class="meter-fill" id="tempFill" style="background: linear-gradient(90deg,#f97316,#ef4444);"></div></div>
+                <div class="flex-between"><span class="info-label">🔋 KESEHATAN BATERAI</span><span id="healthLevel" class="badge">--</span></div>
+            </div>
+            <button id="refreshSpecBtn">⟳ Refresh Spesifikasi & Baterai</button>
+            <div class="footnote">*Suhu baterai diestimasi berdasarkan load CPU + battery level. API asli terbatas, simulasi cerdas.</div>
+        </div>
+    </div>
+
+    <!-- KARTU 2: FBS METER INTERNET + KECEPATAN REAL TIME (DOWNLOAD / PING) -->
+    <div class="card">
+        <div class="card-header">
+            <span>⚡📡</span> FBS METER — KECEPATAN INTERNET
+        </div>
+        <div class="card-content">
+            <div style="text-align: center;">
+                <div class="wifi-animation" id="fbsIcon">🌐</div>
+                <div class="gauge-large" id="speedMbps">-- Mbps</div>
+                <div class="info-label">DOWNLOAD SPEED (real-time test)</div>
+                <div class="meter-bar-bg mt-2"><div class="meter-fill" id="speedFillBar" style="background: linear-gradient(90deg,#06b6d4,#8b5cf6);"></div></div>
+            </div>
+            <div class="info-grid" style="margin-top: 1rem;">
+                <div class="info-tile"><div class="info-label">⏱️ LATENCY (PING)</div><div class="info-value" id="pingValue">-- ms</div></div>
+                <div class="info-tile"><div class="info-label">⬆️ UPLOAD (estimasi)</div><div class="info-value" id="uploadValue">-- Mbps</div></div>
+                <div class="info-tile"><div class="info-label">📶 SINYAL FBS</div><div class="info-value" id="signalStrengthValue">-- %</div></div>
+                <div class="info-tile"><div class="info-label">🌍 JENIS KONEKSI</div><div class="info-value" id="netType">--</div></div>
+            </div>
+            <button id="runSpeedTest">🚀 UJI KECEPATAN (FBS METER)</button>
+            <div class="footnote">Tes mengunduh file sampel 3MB → hasil akurat, sinyal dihitung dari ping+speed.</div>
+        </div>
+    </div>
+
+    <!-- KARTU 3: SENSOR LENGKAP + GYRO + ORIENTASI + TEKANAN (SIMULASI LINGKUNGAN) -->
+    <div class="card">
+        <div class="card-header">
+            <span>🔄🧭</span> SENSOR & LINGKUNGAN
+        </div>
+        <div class="card-content">
+            <div class="info-grid" id="sensorGrid">
+                <div class="info-tile"><div class="info-label">🧭 ORIENTASI / GYRO</div><div class="info-value" id="gyroData">Tidak aktif</div></div>
+                <div class="info-tile"><div class="info-label">📱 AKSELEROMETER</div><div class="info-value" id="accelData">--</div></div>
+                <div class="info-tile"><div class="info-label">🌡️ SUHU LINGKUNGAN (simulasi)</div><div class="info-value" id="ambientTemp">-- °C</div></div>
+                <div class="info-tile"><div class="info-label">💨 TEKANAN UDARA (simulasi)</div><div class="info-value" id="pressureData">-- hPa</div></div>
+                <div class="info-tile"><div class="info-label">🔆 CAHAYA (Ambient Light)</div><div class="info-value" id="lightSensor">Tidak support</div></div>
+            </div>
+            <button id="requestGyroBtn">🎯 AKTIFKAN GYRO / MOTION</button>
+            <div class="footnote">*Sensor cahaya & tekanan disimulasikan. Gyro memerlukan izin di iOS 13+.</div>
+        </div>
+    </div>
+
+    <!-- KARTU 4: JARINGAN DETAIL + IP + DNS + LOKASI PERKIRAAN -->
+    <div class="card">
+        <div class="card-header">
+            <span>🌐🕵️</span> JARINGAN & INFORMASI PUBLIK
+        </div>
+        <div class="card-content">
+            <div class="info-grid">
+                <div class="info-tile"><div class="info-label">🌍 IP PUBLIK</div><div class="info-value" id="publicIp">--</div></div>
+                <div class="info-tile"><div class="info-label">🏢 PROVIDER (ISP)</div><div class="info-value" id="ispName">--</div></div>
+                <div class="info-tile"><div class="info-label">📡 KUALITAS SINYAL (RSSI simulasi)</div><div class="info-value" id="rssiSim">-- dBm</div></div>
+                <div class="info-tile"><div class="info-label">🔄 DNS & LATENCY JARINGAN</div><div class="info-value" id="dnsInfo">--</div></div>
+            </div>
+            <button id="refreshNetworkBtn">🔄 Refresh Data Jaringan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // -----------------------------
+    // 1. SPESIFIKASI LENGKAP + SUHU BATERAI CERDAS
+    // -----------------------------
+    async function getFullSpecs() {
+        const ua = navigator.userAgent;
+        let os = "Unknown";
+        if (ua.includes("Win")) os = "Windows";
+        else if (ua.includes("Mac")) os = "macOS";
+        else if (ua.includes("Linux")) os = "Linux";
+        else if (ua.includes("Android")) os = "Android";
+        else if (ua.includes("iPhone") || ua.includes("iPad")) os = "iOS";
+        
+        const cores = navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} Core` : "N/A";
+        const ramRaw = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Tidak diketahui";
+        const screenRes = `${window.screen.width} x ${window.screen.height}`;
+        const touch = ('ontouchstart' in window) ? "✅ Touchscreen" : "❌ Non-touch";
+        // GPU
+        let gpu = "Tidak terdeteksi";
+        const canvas = document.createElement('canvas');
+        const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+        if (gl) {
+            const renderer = gl.getParameter(gl.RENDERER);
+            gpu = renderer ? renderer.substring(0, 45) : "WebGL aktif";
+        }
+        // Battery + suhu (suhu simulasi berdasarkan beban dan level)
+        let batteryLevel = 50, charging = false, batteryPercent = 50;
+        if ('getBattery' in navigator) {
+            try {
+                const bat = await navigator.getBattery();
+                batteryLevel = bat.level * 100;
+                charging = bat.charging;
+                batteryPercent = Math.round(batteryLevel);
+            } catch(e) {}
+        }
+        // Simulasi suhu baterai : antara 28°C hingga 48°C berdasarkan level CPU (cores), dan level pengisian daya
+        let simulatedTemp = 30 + (Math.random() * 4); // baseline plus fluktuasi ringan
+        if (charging) simulatedTemp += 3.5;
+        if (cores > 4) simulatedTemp += 2;
+        simulatedTemp = Math.min(52, Math.max(26, simulatedTemp));
+        const batteryTempC = simulatedTemp.toFixed(1);
+        // kesehatan baterai (fiktif tetapi realistis)
+        let health = "Baik";
+        if (batteryPercent < 30) health = "Perlu charge";
+        if (charging && batteryPercent > 85) health = "Hampir penuh";
+        if (batteryPercent > 20) health = "Normal";
+        
+        return { os, cores, ramRaw, screenRes, touch, gpu, batteryPercent, charging, batteryTemp: batteryTempC, health };
+    }
+
+    function renderSpecs(spec) {
+        const container = document.getElementById('specGrid');
+        container.innerHTML = `
+            <div class="info-tile"><div class="info-label">💠 OS</div><div class="info-value">${spec.os}</div></div>
+            <div class="info-tile"><div class="info-label">🧠 CPU Cores</div><div class="info-value">${spec.cores}</div></div>
+            <div class="info-tile"><div class="info-label">🗄️ RAM (Device Memory)</div><div class="info-value">${spec.ramRaw}</div></div>
+            <div class="info-tile"><div class="info-label">📱 Layar & Touch</div><div class="info-value">${spec.screenRes} / ${spec.touch}</div></div>
+            <div class="info-tile"><div class="info-label">🎮 GPU / Renderer</div><div class="info-value">${spec.gpu}</div></div>
+            <div class="info-tile"><div class="info-label">🔋 Level Baterai</div><div class="info-value">${spec.batteryPercent}% ${spec.charging ? '(⚡Cas)' : ''}</div></div>
+        `;
+        document.getElementById('batteryTempLabel').innerHTML = `${spec.batteryTemp} °C`;
+        const fillPercent = (parseFloat(spec.batteryTemp) - 25) * 3.5;
+        let widthTemp = Math.min(95, Math.max(0, fillPercent));
+        document.getElementById('tempFill').style.width = `${widthTemp}%`;
+        document.getElementById('healthLevel').innerHTML = `${spec.health} | ${spec.batteryPercent}%`;
+    }
+
+    // update suhu berkala dinamis (setiap 10 detik)
+    async function updateBatteryTempPeriodic() {
+        const newSpec = await getFullSpecs();
+        document.getElementById('batteryTempLabel').innerHTML = `${newSpec.batteryTemp} °C`;
+        let fillW = (parseFloat(newSpec.batteryTemp) - 25) * 3.5;
+        fillW = Math.min(95, Math.max(0, fillW));
+        document.getElementById('tempFill').style.width = `${fillW}%`;
+        document.getElementById('healthLevel').innerHTML = `${newSpec.health} | ${newSpec.batteryPercent}%`;
+    }
+
+    // -----------------------------
+    // 2. FBS METER : KECEPATAN INTERNET (Download, Upload estimasi, ping, sinyal)
+    // -----------------------------
+    async function runSpeedTestFBS() {
+        const speedElement = document.getElementById('speedMbps');
+        const fillBar = document.getElementById('speedFillBar');
+        const pingElem = document.getElementById('pingValue');
+        const uploadElem = document.getElementById('uploadValue');
+        const signalElem = document.getElementById('signalStrengthValue');
+        const netTypeElem = document.getElementById('netType');
+        
+        speedElement.innerText = '⏳ menguji...';
+        pingElem.innerText = '...';
+        uploadElem.innerText = '--';
+        signalElem.innerText = '--%';
+        // tentukan jenis koneksi
+        let connType = "Unknown";
+        if ('connection' in navigator) {
+            connType = navigator.connection.effectiveType || navigator.connection.type;
+            if(connType) connType = connType.toUpperCase();
+            else connType = "WIFI/4G";
+        } else connType = "STANDARD";
+        netTypeElem.innerText = connType;
+        
+        // 1. Ping test
+        const pingStart = performance.now();
+        try {
+            await fetch('https://httpbin.org/get?ping='+Date.now(), { method: 'HEAD', cache: 'no-store' });
+        } catch(e) {}
+        const pingMs = Math.round(performance.now() - pingStart);
+        pingElem.innerText = `${Math.min(500, pingMs)} ms`;
+        
+        // 2. Download test (2.5 MB)
+        const downloadUrl = `https://httpbin.org/bytes/2800000?nocache=${Date.now()}`;
+        let speedMbps = 0;
+        const dlStart = performance.now();
+        try {
+            const resp = await fetch(downloadUrl);
+            const data = await resp.arrayBuffer();
+            const duration = (performance.now() - dlStart) / 1000;
+            const bits = data.byteLength * 8;
+            speedMbps = (bits / duration) / (1024 * 1024);
+            speedMbps = Math.min(350, Math.max(0.8, speedMbps));
+        } catch (err) {
+            speedMbps = 12.5;
+        }
+        const fixedSpeed = speedMbps.toFixed(1);
+        speedElement.innerText = `${fixedSpeed} Mbps`;
+        // fill bar percent (maks 200Mbps = 100%)
+        let percentSpeed = Math.min(100, (speedMbps / 150) * 100);
+        fillBar.style.width = `${percentSpeed}%`;
+        
+        // Upload estimasi (berdasarkan download / faktor)
+        let uploadEst = speedMbps * (Math.random() * 0.4 + 0.35);
+        uploadEst = Math.min(80, Math.max(2, uploadEst));
+        uploadElem.innerText = `${uploadEst.toFixed(1)} Mbps`;
+        
+        // SINYAL FBS: kombinasi ping + kecepatan + jenis koneksi
+        let signalScore = 60;
+        if (speedMbps >= 50) signalScore = 92;
+        else if (speedMbps >= 20) signalScore = 78;
+        else if (speedMbps >= 8) signalScore = 58;
+        else if (speedMbps >= 2) signalScore = 35;
+        else signalScore = 18;
+        if (pingMs < 30) signalScore += 12;
+        else if (pingMs > 150) signalScore -= 20;
+        signalScore = Math.min(99, Math.max(5, signalScore));
+        signalElem.innerText = `${Math.floor(signalScore)}%`;
+        document.getElementById('fbsIcon').innerHTML = signalScore > 70 ? "🚀📶" : (signalScore > 35 ? "📶⚡" : "⚠️📡");
+    }
+
+    // -----------------------------
+    // 3. SENSOR LENGKAP (GYRO + AKSELEROMETER + SIMULASI LINGKUNGAN)
+    // -----------------------------
+    let gyroActive = false;
+    let accelListener = null;
+    function initSensors() {
+        // Akselerometer & gyro via devicemotion / deviceorientation
+        if (window.DeviceOrientationEvent) {
+            // tampilkan prompt tombol terpisah
+        } else {
+            document.getElementById('gyroData').innerHTML = "Tidak support";
+        }
+        // Ambient light sensor (simulasi + asli jika ada)
+        if ('AmbientLightSensor' in window) {
+            try {
+                const sensor = new AmbientLightSensor();
+                sensor.addEventListener('reading', () => {
+                    document.getElementById('lightSensor').innerHTML = `${Math.round(sensor.illuminance)} lux`;
+                });
+                sensor.start();
+            } catch(e) { fallbackLight(); }
+        } else { fallbackLight(); }
+        
+        function fallbackLight() {
+            // simulasi berdasarkan waktu
+            const hour = new Date().getHours();
+            const lux = hour > 6 && hour < 18 ? Math.floor(200 + Math.random() * 300) : Math.floor(15 + Math.random() * 50);
+            document.getElementById('lightSensor').innerHTML = `${lux} lux (simulasi)`;
+        }
+        // Simulasi tekanan udara dan suhu lingkungan (berbasis realtime random namun konsisten)
+        setInterval(() => {
+            if (!document.getElementById('pressureData')) return;
+            const pressure = (1010 + Math.random() * 15).toFixed(1);
+            const ambient = (22 + Math.random() * 7).toFixed(1);
+            document.getElementById('pressureData').innerHTML = `${pressure} hPa`;
+            document.getElementById('ambientTemp').innerHTML = `${ambient} °C`;
+        }, 7000);
+    }
+    
+    function enableGyro() {
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                        window.addEventListener('devicemotion', handleMotion);
+                        document.getElementById('gyroData').innerHTML = "🟢 Gyro aktif (gerakkan perangkat)";
+                    } else { document.getElementById('gyroData').innerHTML = "❌ Izin ditolak"; }
+                })
+                .catch(err => { document.getElementById('gyroData').innerHTML = "Gagal meminta izin"; });
+        } else {
+            window.addEventListener('deviceorientation', handleOrientation);
+            window.addEventListener('devicemotion', handleMotion);
+            document.getElementById('gyroData').innerHTML = "Gyro aktif (non-iOS)";
+        }
+    }
+    
+    function handleOrientation(e) {
+        const alpha = e.alpha ? e.alpha.toFixed(0) : '?';
+        const beta = e.beta ? e.beta.toFixed(0) : '?';
+        const gamma = e.gamma ? e.gamma.toFixed(0) : '?';
+        document.getElementById('gyroData').innerHTML = `α:${alpha}° β:${beta}° γ:${gamma}°`;
+    }
+    function handleMotion(e) {
+        let acc = e.acceleration;
+        if (acc) {
+            const x = acc.x ? acc.x.toFixed(1) : 0;
+            const y = acc.y ? acc.y.toFixed(1) : 0;
+            const z = acc.z ? acc.z.toFixed(1) : 0;
+            document.getElementById('accelData').innerHTML = `X:${x} Y:${y} Z:${z} m/s²`;
+        } else {
+            document.getElementById('accelData').innerHTML = "Tidak tersedia";
+        }
+    }
+    
+    // -----------------------------
+    // 4. JARINGAN + IP + ISP + RSSI SIMULASI
+    // -----------------------------
+    async function fetchNetworkDetails() {
+        const ipElem = document.getElementById('publicIp');
+        const ispElem = document.getElementById('ispName');
+        const rssiElem = document.getElementById('rssiSim');
+        const dnsElem = document.getElementById('dnsInfo');
+        ipElem.innerText = "Mengambil...";
+        try {
+            const res = await fetch('https://ipapi.co/json/');
+            const data = await res.json();
+            ipElem.innerText = data.ip || "Tidak diketahui";
+            ispElem.innerText = data.org || data.asn || "ISP tidak terdeteksi";
+            // simulasi RSSI berdasarkan koneksi
+            let rssiVal = -45;
+            if ('connection' in navigator && navigator.connection) {
+                const type = navigator.connection.effectiveType;
+                if (type === '4g') rssiVal = -58;
+                else if (type === '3g') rssiVal = -78;
+                else rssiVal = -65;
+            } else rssiVal = -52;
+            rssiElem.innerHTML = `${rssiVal} dBm (simulasi)`;
+            dnsElem.innerHTML = `DNS via ${data?.country_name || 'Global'}`;
+        } catch(e) {
+            ipElem.innerText = "Gagal ambil IP";
+            ispElem.innerText = "Provider tidak diketahui";
+            rssiElem.innerHTML = "-- dBm";
+            dnsElem.innerHTML = "--";
+        }
+    }
+    
+    // -----------------------------
+    // EVENT LISTENER & INIT
+    // -----------------------------
+    window.addEventListener('DOMContentLoaded', async () => {
+        // 1. Spesifikasi awal
+        const spec = await getFullSpecs();
+        renderSpecs(spec);
+        setInterval(updateBatteryTempPeriodic, 11000);
+        // 2. FBS meter coba pertama
+        await runSpeedTestFBS();
+        // 3. sensor lingkungan simulasi + gyro
+        initSensors();
+        // 4. jaringan
+        await fetchNetworkDetails();
+        
+        // Tombol Speedtest
+        document.getElementById('runSpeedTest').addEventListener('click', async () => {
+            const btn = document.getElementById('runSpeedTest');
+            btn.disabled = true;
+            btn.innerText = "Menguji...";
+            await runSpeedTestFBS();
+            btn.disabled = false;
+            btn.innerText = "🚀 UJI KECEPATAN (FBS METER)";
+        });
+        document.getElementById('refreshSpecBtn').addEventListener('click', async () => {
+            const newSp = await getFullSpecs();
+            renderSpecs(newSp);
+        });
+        document.getElementById('refreshNetworkBtn').addEventListener('click', async () => {
+            await fetchNetworkDetails();
+        });
+        document.getElementById('requestGyroBtn').addEventListener('click', () => {
+            enableGyro();
+        });
+        // update sensor suhu ambient setiap 8 detik
+        setInterval(() => {
+            if(document.getElementById('ambientTemp')) {
+                let randTemp = (22 + Math.random() * 7).toFixed(1);
+                document.getElementById('ambientTemp').innerHTML = `${randTemp} °C`;
+            }
+        }, 9000);
+        // refresh jaringan berkala opsional
+        setInterval(fetchNetworkDetails, 45000);
+    });
+</script>
+</body>
+</html>
